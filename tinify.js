@@ -13,7 +13,16 @@ tinify.key = '71VjKYqfknJkXBLVLq6zynHb4m8WCWrW'
  * @param {String} dest 
  */
 module.exports = async function tinifyImage(source, dest, cover){
-  let sourceData = await readFile(source)
+  let sourceData = null
+  try {
+    sourceData = await readFile(source)
+  } catch (error) {
+    return Promise.resolve({
+      err: `${source} did not find`,
+      source
+    })
+  }
+  
   return new Promise((resolve, reject) => {
     tinify.fromBuffer(sourceData).toBuffer((err, resultData) => {
       if(err){

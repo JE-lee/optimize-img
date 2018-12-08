@@ -6,6 +6,9 @@ const Path = require("path")
 const mkDir = require('make-dir')
 const chalk = require('chalk')
 const linelog = require('single-line-log').stdout
+const fs = require('fs')
+
+const stat = require('util').promisify(fs.stat)
 
 const program = require('commander')
 
@@ -17,12 +20,15 @@ program
   .parse(process.argv)
 
 
-const dir = program.source || process.cwd()
-const dest = program.dest ? program.dest.trim() : ''
+let dir = program.source || process.cwd()
+let dest = program.dest ? program.dest.trim() : ''
 
 if(dest){ 
+  dest = Path.isAbsolute(dest) ? dest : Path.resolve(process.cwd(), dest)
   mkDir(dest)
 }
+
+dir = Path.isAbsolute(dir) ? dir : Path.resolve(process.cwd(), dir)
 
 /**
  * 
@@ -35,8 +41,16 @@ let tranform = function(source, dest){
 
 
 ;(async () => {
-  let files = await util.walk(dir),
-    total = files.length
+  let files = []
+  // 如果输入图片列表
+  let dirstat = await stat(dir)
+  if(!dirstat.isDirectory()){
+    files = dir.split(',').map(item => Path.resolve(process.cwd(), item))
+  }else{
+    files = await util.walk(dir)
+  }
+  
+  let total = files.length
   console.log(`start to compress ${total} images...`)
   let count = 0
   let results = await Promise.all(files.map(
