@@ -1,0 +1,22 @@
+{
+  "name": "tinyimage",
+  "version": "1.0.0",
+  "description": "tinypng test from https://tinypng.com/dashboard/api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tinify": "node ./index.js"
+  },
+  "keywords": [
+    "tinypng"
+  ],
+  "author": "Lee",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "make-dir": "^1.3.0",
+    "single-line-log": "^1.1.2",
+    "tinify": "^1.6.0-beta.2"
+  }
+}
