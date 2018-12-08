@@ -18,7 +18,7 @@ module.exports = async function tinifyImage(source, dest, cover){
     tinify.fromBuffer(sourceData).toBuffer((err, resultData) => {
       if(err){
         resolve({ 
-          err,
+          err: err || 'error',
           source
         })
       }else {
