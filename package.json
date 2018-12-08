@@ -1,5 +1,5 @@
 {
-  "name": "tinyimage",
+  "name": "reduce-img",
   "version": "1.0.0",
   "description": "tinypng test from https://tinypng.com/dashboard/api",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "tinify": "node ./index.js"
   },
   "keywords": [
-    "tinypng"
+    "reduce-img"
   ],
   "author": "Lee",
   "license": "MIT",
@@ -21,6 +21,6 @@
     "tinify": "^1.6.0-beta.2"
   },
   "bin": {
-    "tinify-image": "./index.js"
+    "reduce-img": "./index.js"
   }
 }
