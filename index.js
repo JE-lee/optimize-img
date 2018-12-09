@@ -7,12 +7,14 @@ const mkDir = require('make-dir')
 const chalk = require('chalk')
 const linelog = require('single-line-log').stdout
 const fs = require('fs')
+const glob = require('glob')
 
 const stat = require('util').promisify(fs.stat)
 
 const program = require('commander')
 
-// 解析comman line
+// parse comman line
+
 program
   .version('0.0.1')
   .option('-s, --source [dir]', 'specify images source directory')
@@ -20,34 +22,74 @@ program
   .parse(process.argv)
 
 
-let dir = program.source || process.cwd()
-let dest = program.dest ? program.dest.trim() : ''
 
-if(dest){ 
-  dest = Path.isAbsolute(dest) ? dest : Path.resolve(process.cwd(), dest)
-  mkDir(dest)
+function handleCommander(_source = '', _dest = ''){
+  
+  let cwd = process.cwd(),
+    dir = _source ,
+    dest = _dest ? Path.resolve(cwd, _dest) : cwd,
+    type = 'glob'
+  
+  function isHasExt(path){
+    return !!Path.parse(path).ext
+  }
+  if(!isHasExt(dir)){
+    // 1. no -s or -d
+    dir = dir ? Path.resolve(cwd, dir) : cwd
+    // if the dest is not a directory, use the file dir for the dest 
+    if(isHasExt(dest)){
+      dest = Path.parse(dest).dir.replace(/\*/g,'tiny')
+    }
+
+    // add glob
+    dir = Path.join(dir, '**/*.?(png|jpg)')
+  }else {
+    // 2. source params is a file name or serveral file name joined with comma
+    //    dest params must be a file path or a directory path.
+    
+    if(dir.indexOf('*') != -1){
+      // if has glob
+      dir = Path.resolve(cwd, dir)
+      // dest is not a directory
+      if(isHasExt(dest)){
+        dest = Path.parse(dest).dir.replace(/\*/g,'tiny')
+      }
+
+    }else{
+      // specific file name
+      type = 'files'
+      dir = dir.split(',').map(i => Path.resolve(cwd, i))
+      if(dir.length > 1 && isHasExt(dest)){
+        dest = Path.parse(dest).dir.replace(/\*/g,'tiny')
+      }else if(dir.length == 1 && !isHasExt(dest)){
+        dir = dir[0]
+        dest = Path.resolve(dest, Path.parse(dir).base)
+      }
+      
+    }
+
+  }
+  return { type, dir, dest}
 }
 
-dir = Path.isAbsolute(dir) ? dir : Path.resolve(process.cwd(), dir)
-
-/**
- * 
- * @param {String} source | file path
- * @param {String} dest | dir path
- */
-let tranform = function(source, dest){
-  return Path.normalize(source.replace(dir, dest))
+function walk(pattern){
+  return new Promise((resolve, reject) => {
+    glob(pattern, (err, files) => {
+      if(err) return reject(err)
+      else resolve(files)
+    })
+  })
 }
 
+let op = handleCommander(program.source, program.dest)
+if(op.type == 'glob') mkDir(op.dest)
 
 ;(async () => {
   let files = []
-  // 如果输入图片列表
-  let dirstat = await stat(dir)
-  if(!dirstat.isDirectory()){
-    files = dir.split(',').map(item => Path.resolve(process.cwd(), item))
+  if(op.type == 'files'){
+    files = op.dir
   }else{
-    files = await util.walk(dir)
+    files = await walk(op.dir)
   }
   
   let total = files.length
@@ -55,7 +97,7 @@ let tranform = function(source, dest){
   let count = 0
   let results = await Promise.all(files.map(
       f => 
-      tinifyImage(f, tranform(f, dest), !dest)
+      tinifyImage(f, op.dest)
       .then((res) => {
         linelog(`${ ((++count) / total).toFixed(2) * 100 }%`)
         return res
@@ -65,7 +107,7 @@ let tranform = function(source, dest){
 
   linelog.clear()
 
-  // 打印结果
+  // log
   results.forEach(result => {
     if(result.err){
       console.log(chalk.red(

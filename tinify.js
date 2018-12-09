@@ -2,6 +2,7 @@ const tinify = require('tinify')
 const fs = require('fs')
 const util = require('util')
 const Stream = require('stream')
+const Path = require('path')
 
 const readFile = util.promisify(fs.readFile)
 
@@ -12,7 +13,7 @@ tinify.key = '71VjKYqfknJkXBLVLq6zynHb4m8WCWrW'
  * @param {String} source 
  * @param {String} dest 
  */
-module.exports = async function tinifyImage(source, dest, cover){
+module.exports = async function tinifyImage(source, dest){
   let sourceData = null
   try {
     sourceData = await readFile(source)
@@ -32,7 +33,7 @@ module.exports = async function tinifyImage(source, dest, cover){
         })
       }else {
         let stream = new Stream.PassThrough(),
-          wstream = fs.createWriteStream(cover ? source : dest)
+          wstream = fs.createWriteStream(Path.parse(dest).ext ? dest : Path.resolve(dest, Path.parse(source).base))
         stream.end(resultData)
         stream.pipe(wstream).on('finish',() => {
           let originSize = sourceData.length,
