@@ -6,6 +6,9 @@ The only thing required to start tinify your image is to get the [tinify key](ht
 ```
 npm install -g reduce-img
 
+// set the key 
+reduce-img -k yourkey
+
 // compress all of png and jpg files in the current directory and then cover it
 reduce-img 
 

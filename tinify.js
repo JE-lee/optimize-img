@@ -6,14 +6,13 @@ const Path = require('path')
 
 const readFile = util.promisify(fs.readFile)
 
-tinify.key = '71VjKYqfknJkXBLVLq6zynHb4m8WCWrW'
-
 /**
  * 
  * @param {String} source 
  * @param {String} dest 
  */
-module.exports = async function tinifyImage(source, dest){
+module.exports = async function tinifyImage(source, dest, key){
+  tinify.key = key
   let sourceData = null
   try {
     sourceData = await readFile(source)

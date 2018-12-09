@@ -8,6 +8,7 @@ const chalk = require('chalk')
 const linelog = require('single-line-log').stdout
 const fs = require('fs')
 const glob = require('glob')
+const stream = require('stream')
 
 const stat = require('util').promisify(fs.stat)
 
@@ -19,9 +20,20 @@ program
   .version('0.0.1')
   .option('-s, --source [dir]', 'specify images source directory')
   .option('-d, --dest [dest]', 'specify output dir. if without dest, the Images will be coverd')
+  .option('-k, --key [key]', 'store your tinify key')
   .parse(process.argv)
 
 
+function storekey(key){
+  let source = new stream.PassThrough()
+  source.end(key)
+  let ws = fs.createWriteStream(Path.resolve(__dirname, './xx.key'))
+  return new Promise((resolve, reject) => {
+    source.pipe(ws).on('finish', () => {
+      resolve()
+    })
+  })
+}
 
 function handleCommander(_source = '', _dest = ''){
   
@@ -84,7 +96,26 @@ function walk(pattern){
 let op = handleCommander(program.source, program.dest)
 if(op.type == 'glob') mkDir(op.dest)
 
+
 ;(async () => {
+  if(program.key){
+    await storekey(program.key)
+    console.log('set key success')
+    return  
+  }
+  // 先读取key
+  let keypath = Path.resolve(__dirname, './xx.key'),
+  key = program.key
+  if(fs.existsSync(keypath)){
+     key = fs.readFileSync(keypath, 'utf8')
+  }
+
+  // 
+  if(!key){
+    console.log('please set the tinify key first')
+    return 
+  }
+
   let files = []
   if(op.type == 'files'){
     files = op.dir
@@ -97,7 +128,7 @@ if(op.type == 'glob') mkDir(op.dest)
   let count = 0
   let results = await Promise.all(files.map(
       f => 
-      tinifyImage(f, op.dest)
+      tinifyImage(f, op.dest, key)
       .then((res) => {
         linelog(`${ ((++count) / total).toFixed(2) * 100 }%`)
         return res
@@ -112,7 +143,7 @@ if(op.type == 'glob') mkDir(op.dest)
     if(result.err){
       console.log(chalk.red(
         `${result.source} compress fail !!!
-        ${err}`
+        ${result.err}`
     ))
     }else{
       console.log(chalk.green(
