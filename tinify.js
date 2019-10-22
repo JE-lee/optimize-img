@@ -7,11 +7,11 @@ const Path = require('path')
 const readFile = util.promisify(fs.readFile)
 
 /**
- * 
- * @param {String} source 
- * @param {String} dest 
+ *
+ * @param {String} source
+ * @param {String} dest
  */
-module.exports = async function tinifyImage(source, dest, key){
+module.exports = async function tinifyImage(source, dest, key) {
   tinify.key = key
   let sourceData = null
   try {
@@ -19,35 +19,40 @@ module.exports = async function tinifyImage(source, dest, key){
   } catch (error) {
     return Promise.resolve({
       err: `${source} did not find`,
-      source
+      source,
     })
   }
-  
+
   return new Promise((resolve, reject) => {
     tinify.fromBuffer(sourceData).toBuffer((err, resultData) => {
-      if(err){
-        resolve({ 
+      if (err) {
+        resolve({
           err: err || 'error',
-          source
+          source,
         })
-      }else {
+      } else {
         let stream = new Stream.PassThrough(),
-          wstream = fs.createWriteStream(Path.parse(dest).ext ? dest : Path.resolve(dest, Path.parse(source).base))
+          wstream = fs.createWriteStream(
+            Path.parse(dest).ext
+              ? dest
+              : Path.resolve(dest, Path.parse(source).base)
+          )
         stream.end(resultData)
-        stream.pipe(wstream).on('finish',() => {
-          let originSize = sourceData.length,
-          tinifySize = resultData.length
-          resolve({
-            source,
-            dest,
-            originSize: `${(originSize / 1024).toFixed(2)}Kb`,
-            tinifySize: `${(tinifySize / 1024).toFixed(2)}Kb`,
-            tinifyRatio: `${(1 - (tinifySize / originSize)).toFixed(2)*100}%`
+        stream
+          .pipe(wstream)
+          .on('finish', () => {
+            let originSize = sourceData.length,
+              tinifySize = resultData.length
+            resolve({
+              source,
+              dest,
+              originSize: `${(originSize / 1024).toFixed(2)}Kb`,
+              tinifySize: `${(tinifySize / 1024).toFixed(2)}Kb`,
+              tinifyRatio: `${(1 - tinifySize / originSize).toFixed(2) * 100}%`,
+            })
           })
-        }).on('error', err => reject(err))
+          .on('error', err => reject(err))
       }
-       
     })
   })
-  
 }
