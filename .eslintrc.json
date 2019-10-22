@@ -1,0 +1,22 @@
+{
+  "root": true,
+  "env": {},
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2018
+  },
+  "extends": [
+    "eslint:recommended",
+    "eslint-config-prettier"
+  ],
+  "plugins": [
+    "prettier"
+  ],
+  "rules": {
+    "prettier/prettier": [
+      "error"
+    ],
+    "no-debugger": "off",
+    "one-var": 1
+  }
+}
