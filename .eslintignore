@@ -4,7 +4,6 @@ coverage/**
 .vscode/**
 dist/**
 node_modules
-test
 package-lock.json
 .vscode
 assets
